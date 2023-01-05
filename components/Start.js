@@ -32,34 +32,34 @@ export default function Start(props) {
                     <View style={styles.colorContainer}>
                         <Text style={styles.text}>Choose a Background Color:</Text>
                         <View style={styles.colors}>
-                            <TouchableOpacity 
+                            <TouchableOpacity
                                 style={[
-                                    styles.circle, 
-                                    {backgroundColor: backgroundColors.black},
+                                    styles.circle,
+                                    { backgroundColor: backgroundColors.black },
                                     color === backgroundColors.black ? styles.selectedColor : {}
                                 ]}
                                 onPress={() => setColor(backgroundColors.black)}
                             />
-                            <TouchableOpacity 
+                            <TouchableOpacity
                                 style={[
-                                    styles.circle, 
-                                    {backgroundColor: backgroundColors.purple},
+                                    styles.circle,
+                                    { backgroundColor: backgroundColors.purple },
                                     color === backgroundColors.purple ? styles.selectedColor : {}
                                 ]}
                                 onPress={() => setColor(backgroundColors.purple)}
                             />
-                            <TouchableOpacity 
+                            <TouchableOpacity
                                 style={[
-                                    styles.circle, 
-                                    {backgroundColor: backgroundColors.blue},
+                                    styles.circle,
+                                    { backgroundColor: backgroundColors.blue },
                                     color === backgroundColors.blue ? styles.selectedColor : {}
                                 ]}
                                 onPress={() => setColor(backgroundColors.blue)}
                             />
-                            <TouchableOpacity 
+                            <TouchableOpacity
                                 style={[
-                                    styles.circle, 
-                                    {backgroundColor: backgroundColors.green},
+                                    styles.circle,
+                                    { backgroundColor: backgroundColors.green },
                                     color === backgroundColors.green ? styles.selectedColor : {}
                                 ]}
                                 onPress={() => setColor(backgroundColors.green)}
@@ -69,6 +69,9 @@ export default function Start(props) {
                     <TouchableOpacity
                         style={styles.startButton}
                         onPress={() => props.navigation.navigate('Chat', { name: name, color: color })}
+                        accessible={true}
+                        accessibilityLabel='Go to chat'
+                        accessibilityHint='Click the button to navigate to the chat screen'
                     >
                         <Text style={styles.buttonText}>START CHATTING</Text>
                     </TouchableOpacity>
@@ -138,14 +141,14 @@ const styles = StyleSheet.create({
     circle: {
         width: 60,
         height: 60,
-        borderRadius: 60/2,
+        borderRadius: 60 / 2,
         backgroundColor: 'blue'
     },
 
     selectedColor: {
         width: 60,
         height: 60,
-        borderRadius: 60/2,
+        borderRadius: 60 / 2,
         borderWidth: 4,
         borderColor: 'grey'
     },
@@ -158,7 +161,7 @@ const styles = StyleSheet.create({
     },
 
     buttonText: {
-        fontSize: 16, 
+        fontSize: 16,
         fontWeight: '600',
         color: '#fff'
     }
