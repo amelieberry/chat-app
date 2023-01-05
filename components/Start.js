@@ -33,19 +33,35 @@ export default function Start(props) {
                         <Text style={styles.text}>Choose a Background Color:</Text>
                         <View style={styles.colors}>
                             <TouchableOpacity 
-                                style={[styles.circle, {backgroundColor: backgroundColors.black}]}
+                                style={[
+                                    styles.circle, 
+                                    {backgroundColor: backgroundColors.black},
+                                    color === backgroundColors.black ? styles.selectedColor : {}
+                                ]}
                                 onPress={() => setColor(backgroundColors.black)}
                             />
                             <TouchableOpacity 
-                                style={[styles.circle, {backgroundColor: backgroundColors.purple}]}
+                                style={[
+                                    styles.circle, 
+                                    {backgroundColor: backgroundColors.purple},
+                                    color === backgroundColors.purple ? styles.selectedColor : {}
+                                ]}
                                 onPress={() => setColor(backgroundColors.purple)}
                             />
                             <TouchableOpacity 
-                                style={[styles.circle, {backgroundColor: backgroundColors.blue}]}
+                                style={[
+                                    styles.circle, 
+                                    {backgroundColor: backgroundColors.blue},
+                                    color === backgroundColors.blue ? styles.selectedColor : {}
+                                ]}
                                 onPress={() => setColor(backgroundColors.blue)}
                             />
                             <TouchableOpacity 
-                                style={[styles.circle, {backgroundColor: backgroundColors.green}]}
+                                style={[
+                                    styles.circle, 
+                                    {backgroundColor: backgroundColors.green},
+                                    color === backgroundColors.green ? styles.selectedColor : {}
+                                ]}
                                 onPress={() => setColor(backgroundColors.green)}
                             />
                         </View>
@@ -119,12 +135,19 @@ const styles = StyleSheet.create({
         justifyContent: 'space-evenly',
     },
 
-
     circle: {
         width: 60,
         height: 60,
         borderRadius: 60/2,
         backgroundColor: 'blue'
+    },
+
+    selectedColor: {
+        width: 60,
+        height: 60,
+        borderRadius: 60/2,
+        borderWidth: 4,
+        borderColor: 'grey'
     },
 
     startButton: {
