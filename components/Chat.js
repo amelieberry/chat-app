@@ -5,6 +5,7 @@ export default function Chat(props) {
     let { color } = props.route.params;
 
     useEffect(() => {
+        // use name prop to set the title in nav to the name entered by the user
         let { name } = props.route.params;
         props.navigation.setOptions({ title: name });
     });

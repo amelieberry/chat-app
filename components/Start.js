@@ -1,12 +1,15 @@
 import React, { useState } from "react";
 import { View, Text, Button, TextInput, StyleSheet, ImageBackground, TouchableOpacity } from "react-native";
 
+// define background colors selectable by users
 const backgroundColors = {
     black: '#090C08',
     purple: '#474056',
     blue: '#8A95A5',
     green: '#B9C6AE'
 }
+
+// Start component - The state of name and color are set from user input to be used as props in Chat component.
 export default function Start(props) {
     const [name, setName] = useState('');
     const [color, setColor] = useState(backgroundColors.black);
