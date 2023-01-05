@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { View, Platform, KeyboardAvoidingView } from "react-native";
 
-import { Bubble, GiftedChat } from 'react-native-gifted-chat';
+import { Bubble, Day, GiftedChat, SystemMessage } from 'react-native-gifted-chat';
 
 export default function Chat(props) {
     const [messages, setMessages] = useState([]);
@@ -38,7 +38,7 @@ export default function Chat(props) {
         setMessages(previousMessages => GiftedChat.append(previousMessages, messages))
     }, [])
 
-    // Customize render bubble
+    // Customize right chat bubble
     function renderBubble(props) {
         return (
             <Bubble {...props}
@@ -51,10 +51,34 @@ export default function Chat(props) {
         )
     }
 
+    // Customize system message text color
+    function renderSystemMessage(props) {
+        return (
+            <SystemMessage {...props}
+                textStyle={{
+                    color: '#fff'
+                }}
+            />
+        )
+    }
+
+    // Customize text color of date on top of messages
+    function renderDay(props) {
+        return (
+            <Day {...props}
+                textStyle={{
+                    color: '#fff'
+                }}
+            />
+        )    
+    }
+
     return (
         <View style={{ flex: 1, backgroundColor: color }}>
             <GiftedChat
                 renderBubble={renderBubble}
+                renderSystemMessage={renderSystemMessage}
+                renderDay={renderDay}
                 messages={messages}
                 onSend={messages => onSend(messages)}
                 user={{
@@ -62,7 +86,7 @@ export default function Chat(props) {
                 }}
                 accessible={true}
                 accessibilityLabel='Chat text input field'
-                accessibilityHint='Enter your message here and press "Send" on the right to sned your message '
+                accessibilityHint='Enter your message here and press "Send" on the right to send your message '
             />
             {Platform.OS === 'android' ? <KeyboardAvoidingView behavior="height" /> : null
             }
