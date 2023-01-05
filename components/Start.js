@@ -5,8 +5,8 @@ import { View, Text, Button, TextInput, StyleSheet, ImageBackground, TouchableOp
 const backgroundColors = {
     black: '#090C08',
     purple: '#474056',
-    blue: '#8A95A5',
-    green: '#B9C6AE'
+    blue: '#415471',
+    green: '#4B7C4D'
 }
 
 // Start component - The state of name and color are set from user input to be used as props in Chat component.
@@ -102,7 +102,7 @@ const styles = StyleSheet.create({
     },
 
     inputContainer: {
-        backgroundColor: '#fff',
+        backgroundColor: 'rgba(255, 255, 255, 0.8)',
         height: '44%',
         width: '88%',
         justifyContent: 'space-between',
