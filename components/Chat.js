@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { View, Platform, KeyboardAvoidingView } from "react-native";
+import { Text, View, Platform, KeyboardAvoidingView } from "react-native";
 import firebase from 'firebase';
 import firestore from 'firebase';
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -9,7 +9,13 @@ import { Bubble, Day, GiftedChat, SystemMessage } from 'react-native-gifted-chat
 export default function Chat(props) {
     const [messages, setMessages] = useState([]);
     const [uid, setUid] = useState("");
-    let { color } = props.route.params;
+    const [user, setUser] = useState({
+        _id: '',
+        name: '',
+        avatar: '',
+    });
+    const [loginText, setLoginText] = useState('Logging you in, please wait');
+    let { color, name } = props.route.params;
 
     // Initialize Firestore App
     const firebaseConfig = {
@@ -38,7 +44,7 @@ export default function Chat(props) {
     }, []);
 
     // add message document to the messages collection
-    const addMessage = (message) => {     
+    const addMessage = (message) => {
         referenceChatMessages.add({
             uid: message.uid,
             _id: message._id,
@@ -72,11 +78,9 @@ export default function Chat(props) {
 
     useEffect(() => {
         // use name prop to set the title in nav to the name entered by the user
-        let { name } = props.route.params;
         props.navigation.setOptions({ title: name });
 
         let unsubscribe = null;
-        // let unsubscribe = referenceChatMessages.orderBy('createdAt', 'desc').onSnapshot(onCollectionUpdate);
 
         // listen to authentication events
         const authUnsubscribe = firebase.auth().onAuthStateChanged(async (user) => {
@@ -85,11 +89,15 @@ export default function Chat(props) {
                 console.log("USER AUTH", user.user)
             }
             setUid(user.uid);
+            setUser({
+                _id: user.uid,
+                name: name,
+                avatar: 'https://placeimg.com/140/140/any',
+            });
+            setLoginText(`Hello ${name}`)
             // update user state with currently active user data
             referenceMessagesUser = user.uid;
 
-            // console.warn('message uid', messages[0].uid);
-            // console.log("referenceChatMessages", await referenceChatMessages.get({uid: user.uid}));
             await referenceChatMessages.get({ uid: user.uid }).then((querySnapshot) => {
                 const docs = querySnapshot.docs.map(doc => doc.data());
                 if (docs) {
@@ -110,15 +118,10 @@ export default function Chat(props) {
                                 }
                             });
                         });
-
-                        // console.log("SETTING OLD MESSAGES: ", oldMessages)
                         setMessages(oldMessages);
                     }
-
                 }
             });
-            // create a reference to the active user's messages
-
             // Listen for collection changes for the user
             unsubscribe = referenceChatMessages.orderBy('createdAt', 'desc').onSnapshot(onCollectionUpdate);
         })
@@ -174,9 +177,9 @@ export default function Chat(props) {
                 messages={messages}
                 referenceMessagesUser={referenceMessagesUser}
                 onSend={messages => onSend(messages, referenceMessagesUser)}
-                user={{
-                    _id: uid,
-                }}
+                user={user}
+                showAvatarForEveryMessage={true}
+                renderUsernameOnMessage={true}
                 accessible={true}
                 accessibilityLabel='Chat text input field'
                 accessibilityHint='Enter your message here and press "Send" on the right to send your message '
