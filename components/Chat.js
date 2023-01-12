@@ -1,12 +1,16 @@
+// React & React Native Imports
 import React, { useCallback, useEffect, useState } from "react";
 import { Text, View, Platform, KeyboardAvoidingView } from "react-native";
+// Firebase Imports
 import firebase from 'firebase';
 import firestore from 'firebase';
-import AsyncStorage from "@react-native-async-storage/async-storage";
-
+// AsyncStorage Imports
+import { getMessages, saveMessages, deleteMessages } from "../asyncStorage";
+// Gifted Chat Imports
 import { Bubble, Day, GiftedChat, SystemMessage } from 'react-native-gifted-chat';
 
 export default function Chat(props) {
+    // Declare States
     const [messages, setMessages] = useState([]);
     const [uid, setUid] = useState("");
     const [user, setUser] = useState({
@@ -15,6 +19,8 @@ export default function Chat(props) {
         avatar: '',
     });
     const [loginText, setLoginText] = useState('Logging you in, please wait');
+
+    // Declare props from start.js
     let { color, name } = props.route.params;
 
     // Initialize Firestore App
@@ -132,6 +138,11 @@ export default function Chat(props) {
             authUnsubscribe();
         };
     }, [])
+
+    // save messages to AsyncStorage when the state of 'messages' is updated
+    useEffect(() => {
+        saveMessages(messages);
+    }, [messages])
 
     // Customize right chat bubble
     function renderBubble(props) {
