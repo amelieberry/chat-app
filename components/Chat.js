@@ -7,7 +7,9 @@ import firestore from 'firebase';
 // AsyncStorage Imports
 import { getMessages, saveMessages, deleteMessages } from "../asyncStorage";
 // Gifted Chat Imports
-import { Bubble, Day, GiftedChat, SystemMessage } from 'react-native-gifted-chat';
+import { Bubble, Day, GiftedChat, InputToolbar, SystemMessage } from 'react-native-gifted-chat';
+// NetInfo import
+import NetInfo from '@react-native-community/netinfo';
 
 export default function Chat(props) {
     // Declare States
@@ -19,6 +21,7 @@ export default function Chat(props) {
         avatar: '',
     });
     const [loginText, setLoginText] = useState('Logging you in, please wait');
+    const [isOnline, setIsOnline] = useState(false);
 
     // Declare props from start.js
     let { color, name } = props.route.params;
@@ -82,70 +85,103 @@ export default function Chat(props) {
         setMessages(messages);
     }
 
+    // Get the connection state and listen to changes being made to it
+    useEffect(() => {
+        NetInfo.fetch().then(connection => {
+            setIsOnline(connection.isConnected);
+        });
+
+        const unsubNetInfo = NetInfo.addEventListener(
+            connection => {
+                setIsOnline(connection.isConnected);
+            });
+
+        // stop listening
+        return () => {
+            unsubNetInfo();
+        }
+    }, []);
+
+    // if the user is online, get the data from firestore, if not, get the data from AsyncStorage
     useEffect(() => {
         // use name prop to set the title in nav to the name entered by the user
         props.navigation.setOptions({ title: name });
-
         let unsubscribe = null;
 
-        // listen to authentication events
-        const authUnsubscribe = firebase.auth().onAuthStateChanged(async (user) => {
-            if (!user) {
-                const user = await firebase.auth().signInAnonymously();
-                console.log("USER AUTH", user.user)
-            }
-            setUid(user.uid);
-            setUser({
-                _id: user.uid,
-                name: name,
-                avatar: 'https://placeimg.com/140/140/any',
-            });
-            setLoginText(`Hello ${name}`)
-            // update user state with currently active user data
-            referenceMessagesUser = user.uid;
-
-            await referenceChatMessages.get({ uid: user.uid }).then((querySnapshot) => {
-                const docs = querySnapshot.docs.map(doc => doc.data());
-                if (docs) {
-                    if (docs.length > 0) {
-                        const oldMessages = [];
-                        //go through each document
-                        docs.forEach((doc) => {
-                            //get the QueryDocumentSnapshot's data                               
-                            oldMessages.push({
-                                _id: doc._id,
-                                text: doc.text,
-                                createdAt: doc.createdAt.toDate(),
-                                uid: doc.uid,
-                                user: {
-                                    _id: doc.user._id,
-                                    name: doc.user.name,
-                                    avatar: doc.user.avatar,
-                                }
-                            });
-                        });
-                        setMessages(oldMessages);
-                    }
+        if (isOnline) {
+            // listen to authentication events
+            const authUnsubscribe = firebase.auth().onAuthStateChanged(async (user) => {
+                if (!user) {
+                    const user = await firebase.auth().signInAnonymously();
+                    console.log("USER AUTH", user.user)
                 }
-            });
-            // Listen for collection changes for the user
-            unsubscribe = referenceChatMessages.orderBy('createdAt', 'desc').onSnapshot(onCollectionUpdate);
-        })
+                setUid(user.uid);
+                setUser({
+                    _id: user.uid,
+                    name: name,
+                    avatar: 'https://placeimg.com/140/140/any',
+                });
+                setLoginText(`Hello ${name}`)
+                // update user state with currently active user data
+                referenceMessagesUser = user.uid;
 
-        // stop listening for updates when no longer required
-        return () => {
-            unsubscribe();
-            authUnsubscribe();
-        };
-    }, [])
+                await referenceChatMessages.get({ uid: user.uid }).then((querySnapshot) => {
+                    const docs = querySnapshot.docs.map(doc => doc.data());
+                    if (docs) {
+                        if (docs.length > 0) {
+                            const oldMessages = [];
+                            //go through each document
+                            docs.forEach((doc) => {
+                                //get the QueryDocumentSnapshot's data                               
+                                oldMessages.push({
+                                    _id: doc._id,
+                                    text: doc.text,
+                                    createdAt: doc.createdAt.toDate(),
+                                    uid: doc.uid,
+                                    user: {
+                                        _id: doc.user._id,
+                                        name: doc.user.name,
+                                        avatar: doc.user.avatar,
+                                    }
+                                });
+                            });
+                            setMessages(oldMessages);
+                        }
+                    }
+                });
+                // Listen for collection changes for the user
+                unsubscribe = referenceChatMessages.orderBy('createdAt', 'desc').onSnapshot(onCollectionUpdate);
+
+                // stop listening for updates when no longer required
+                return () => {
+                    unsubscribe();
+                    authUnsubscribe();
+                };
+            })
+        }
+        // If the user is offline, let them know and get messages from AsyncStorage
+        else {
+            setLoginText('You appear to be offline');
+            getMessages().then((messageParsed) => setMessages(messageParsed));
+        }
+    }, [isOnline]);
 
     // save messages to AsyncStorage when the state of 'messages' is updated
     useEffect(() => {
         saveMessages(messages);
-    }, [messages])
+    }, [messages]);
+
+    //Customize input toolbar - hide if offline
+    const renderInputToolbar = (props) => {
+        if (!isOnline) {
+            return null;
+        } else {
+            return <InputToolbar {...props} />
+        }
+    };
 
     // Customize right chat bubble
-    function renderBubble(props) {
+    const renderBubble = (props) => {
         return (
             <Bubble {...props}
                 wrapperStyle={{
@@ -158,7 +194,7 @@ export default function Chat(props) {
     }
 
     // Customize system message text color
-    function renderSystemMessage(props) {
+    const renderSystemMessage = (props) => {
         return (
             <SystemMessage {...props}
                 textStyle={{
@@ -169,7 +205,7 @@ export default function Chat(props) {
     }
 
     // Customize text color of date on top of messages
-    function renderDay(props) {
+    const renderDay = (props) => {
         return (
             <Day {...props}
                 textStyle={{
@@ -182,6 +218,7 @@ export default function Chat(props) {
     return (
         <View style={{ flex: 1, backgroundColor: color }}>
             <GiftedChat
+                renderInputToolbar={renderInputToolbar}
                 renderBubble={renderBubble}
                 renderSystemMessage={renderSystemMessage}
                 renderDay={renderDay}
@@ -195,6 +232,9 @@ export default function Chat(props) {
                 accessibilityLabel='Chat text input field'
                 accessibilityHint='Enter your message here and press "Send" on the right to send your message '
             />
+            {!isOnline && (
+                <Text style={{ color: 'white', textAlign: 'center' }}>{loginText}</Text>
+            )}
             {Platform.OS === 'android' ? <KeyboardAvoidingView behavior="height" /> : null
             }
         </View>
