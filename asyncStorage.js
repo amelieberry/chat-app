@@ -6,8 +6,6 @@ export const getMessages = async () => {
         const messageStringified =
             (await AsyncStorage.getItem('messages')) || [];
         const messageParsed = JSON.parse(messageStringified) || [];
-        console.log('AsyncStorage number of messages in Array:', messageParsed.length)
-        console.log('AsyncStorage messages:', messageParsed);
         return messageParsed;
     } catch (error) {
         console.error('get message from storage error', error.message);
@@ -18,7 +16,6 @@ export const getMessages = async () => {
 export const saveMessages = async (messages) => {
     try {
         await AsyncStorage.setItem('messages', JSON.stringify(messages));
-        console.warn('saved in local storage:', messages)
     } catch (error) {
         console.error('save message to storage error', error.message);
     }
