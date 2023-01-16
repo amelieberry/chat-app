@@ -10,6 +10,9 @@ import { getMessages, saveMessages, deleteMessages } from "../asyncStorage";
 import { Bubble, Day, GiftedChat, InputToolbar, SystemMessage } from 'react-native-gifted-chat';
 // NetInfo import
 import NetInfo from '@react-native-community/netinfo';
+// CustomActions import
+import CustomActions from "./CustomActions";
+
 
 export default function Chat(props) {
     // Declare States
@@ -215,6 +218,13 @@ export default function Chat(props) {
         )
     }
 
+    // render the button that displays communication features options (upload image, take photo, get location)
+    const renderCustomActions = (props) => {
+        return (
+            <CustomActions {...props} />
+        )
+    }
+
     return (
         <View style={{ flex: 1, backgroundColor: color }}>
             <GiftedChat
@@ -222,6 +232,7 @@ export default function Chat(props) {
                 renderBubble={renderBubble}
                 renderSystemMessage={renderSystemMessage}
                 renderDay={renderDay}
+                renderActions={renderCustomActions}
                 messages={messages}
                 referenceMessagesUser={referenceMessagesUser}
                 onSend={messages => onSend(messages, referenceMessagesUser)}
