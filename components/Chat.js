@@ -10,8 +10,9 @@ import { getMessages, saveMessages, deleteMessages } from "../asyncStorage";
 import { Bubble, Day, GiftedChat, InputToolbar, SystemMessage } from 'react-native-gifted-chat';
 // NetInfo import
 import NetInfo from '@react-native-community/netinfo';
-// CustomActions import
+// CustomActions imports
 import CustomActions from "./CustomActions";
+import MapView from 'react-native-maps';
 
 
 export default function Chat(props) {
@@ -57,13 +58,19 @@ export default function Chat(props) {
 
     // add message document to the messages collection
     const addMessage = (message) => {
-        referenceChatMessages.add({
-            uid: message.uid,
-            _id: message._id,
-            text: message.text,
-            createdAt: message.createdAt,
-            user: message.user,
-        });
+        try {
+            referenceChatMessages.add({
+                uid: message.uid,
+                _id: message._id,
+                text: message.text || '',
+                createdAt: message.createdAt,
+                user: message.user,
+                image: message.image || '',
+                location: message.location || null,
+            });
+        } catch (error) {
+            console.error('addMessage chat.js', error);
+        }
     }
 
     // retrieve the current data from messages collection and store it in messages state
@@ -82,7 +89,9 @@ export default function Chat(props) {
                     _id: data.user._id,
                     name: data.user.name,
                     avatar: data.user.avatar,
-                }
+                },
+                image: data.image || null,
+                location: data.location || null,
             });
         });
         setMessages(messages);
@@ -145,7 +154,9 @@ export default function Chat(props) {
                                         _id: doc.user._id,
                                         name: doc.user.name,
                                         avatar: doc.user.avatar,
-                                    }
+                                    },
+                                    image: doc.image,
+                                    location: doc.location,
                                 });
                             });
                             setMessages(oldMessages);
@@ -225,6 +236,31 @@ export default function Chat(props) {
         )
     }
 
+    // render the MapView in chat when the user sends their location
+    const renderCustomView = (props) => {
+        const { currentMessage } = props;
+
+        if (currentMessage.location) {
+            return (
+                <MapView
+                    style={{
+                        width: 150,
+                        height: 100,
+                        borderRadius: 13,
+                        margin: 3
+                    }}
+                    region={{
+                        latitude: currentMessage.location.latitude,
+                        longitude: currentMessage.location.longitude,
+                        latitudeDelta: 0.0922,
+                        longitudeDelta: 0.0421,
+                    }}
+                />
+            )
+        }
+        return null;
+    }
+
     return (
         <View style={{ flex: 1, backgroundColor: color }}>
             <GiftedChat
@@ -233,6 +269,7 @@ export default function Chat(props) {
                 renderSystemMessage={renderSystemMessage}
                 renderDay={renderDay}
                 renderActions={renderCustomActions}
+                renderCustomView={renderCustomView}
                 messages={messages}
                 referenceMessagesUser={referenceMessagesUser}
                 onSend={messages => onSend(messages, referenceMessagesUser)}
