@@ -40,7 +40,10 @@ Firebase documentation can be found [here](https://firebase.google.com/docs/web/
 
 * In your [Firebase Console](https://console.firebase.google.com), create a project in test mode.
 * In your project's directory, run `npm install firebase@8.2.3`.
-* At the top of your Chat.js file, import Firebase: `import firebase from 'firebase';`
+* At the top of your Chat.js file, import Firebase: 
+>```js
+>import firebase from 'firebase';
+>```
 * Back in the Firebase Console, navigate to Project Settings and select the `</>` icon to register the application.
 * Copy the data received in the last step and store it in a variable:
 >```js
