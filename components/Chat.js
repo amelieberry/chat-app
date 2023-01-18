@@ -18,7 +18,7 @@ import MapView from 'react-native-maps';
 export default function Chat(props) {
     // Declare States
     const [messages, setMessages] = useState([]);
-    const [uid, setUid] = useState("");
+    const [uid, setUid] = useState('');
     const [user, setUser] = useState({
         _id: '',
         name: '',
@@ -45,14 +45,100 @@ export default function Chat(props) {
     }
 
     // refer to the 'messages' collection in the database
-    let referenceMessagesUser = null;
     const referenceChatMessages = firebase.firestore().collection('messages');
 
-    // when message is sent, append new message to messages state
-    const onSend = useCallback((messages = []) => {
+    // Get the connection state and listen to changes being made to it
+    useEffect(() => {
+        NetInfo.fetch().then(connection => {
+            setIsOnline(connection.isConnected);
+        });
+
+        const unsubNetInfo = NetInfo.addEventListener(
+            connection => {
+                setIsOnline(connection.isConnected);
+            });
+
+        // stop listening
+        return () => {
+            unsubNetInfo();
+        }
+    }, []);
+
+    // if the user is online, get the data from firestore, if not, get the data from AsyncStorage
+    useEffect(() => {
+        // use name prop to set the title in nav to the name entered by the user
+        props.navigation.setOptions({ title: name });
+
+        if (isOnline) {
+            // listen to authentication events
+            const authUnsubscribe = firebase.auth().onAuthStateChanged(async (user) => {
+                if (!user) {
+                    await firebase.auth().signInAnonymously();
+                }
+                // update user and uid state with currently active user data
+                setUid(user.uid);
+                setUser({
+                    _id: user.uid,
+                    name: name,
+                    avatar: 'https://placeimg.com/140/140/any',
+                });
+
+                // user should be able to see their past messages
+                await referenceChatMessages.get({ uid: user.uid }).then((querySnapshot) => {
+                    const docs = querySnapshot.docs.map(doc => doc.data());
+                    if (docs) {
+                        if (docs.length > 0) {
+                            const oldMessages = [];
+                            //go through each document
+                            docs.forEach((doc) => {
+                                //get the QueryDocumentSnapshot's data                               
+                                oldMessages.push({
+                                    _id: doc._id,
+                                    text: doc.text,
+                                    createdAt: doc.createdAt.toDate(),
+                                    uid: doc.uid,
+                                    user: {
+                                        _id: doc.user._id,
+                                        name: doc.user.name,
+                                        avatar: doc.user.avatar,
+                                    },
+                                    image: doc.image,
+                                    location: doc.location,
+                                });
+                            });
+                            setMessages(oldMessages);
+                        }
+                    }
+                });
+
+
+                // Listen for collection changes
+                const unsubscribe = referenceChatMessages.orderBy('createdAt', 'desc').onSnapshot(onCollectionUpdate);
+
+                // stop listening for updates when no longer required
+                return () => {
+                    unsubscribe();
+                    authUnsubscribe();
+                };
+            })
+        }
+        // If the user is offline, let them know and get messages from AsyncStorage
+        else {
+            setLoginText('You appear to be offline');
+            getMessages().then((messageParsed) => setMessages(messageParsed));
+        }
+    }, [isOnline]);
+
+    // save messages to AsyncStorage when the state of 'messages' is updated
+    useEffect(() => {
+        saveMessages(messages);
+    }, [messages]);
+
+    // triggers when user sends a message / image / location. Sets new message to messages state, calls addMessage.
+    const onSend = useCallback((messages = [], id) => {
         setMessages(previousMessages => GiftedChat.append(previousMessages, messages));
         const message = messages[0];
-        message.uid = referenceMessagesUser
+        message.uid = uid ? uid : id;
         addMessage(message);
     }, []);
 
@@ -96,94 +182,6 @@ export default function Chat(props) {
         });
         setMessages(messages);
     }
-
-    // Get the connection state and listen to changes being made to it
-    useEffect(() => {
-        NetInfo.fetch().then(connection => {
-            setIsOnline(connection.isConnected);
-        });
-
-        const unsubNetInfo = NetInfo.addEventListener(
-            connection => {
-                setIsOnline(connection.isConnected);
-            });
-
-        // stop listening
-        return () => {
-            unsubNetInfo();
-        }
-    }, []);
-
-    // if the user is online, get the data from firestore, if not, get the data from AsyncStorage
-    useEffect(() => {
-        // use name prop to set the title in nav to the name entered by the user
-        props.navigation.setOptions({ title: name });
-        let unsubscribe = null;
-
-        if (isOnline) {
-            // listen to authentication events
-            const authUnsubscribe = firebase.auth().onAuthStateChanged(async (user) => {
-                if (!user) {
-                    const user = await firebase.auth().signInAnonymously();
-                    console.log("USER AUTH", user.user)
-                }
-                setUid(user.uid);
-                setUser({
-                    _id: user.uid,
-                    name: name,
-                    avatar: 'https://placeimg.com/140/140/any',
-                });
-                setLoginText(`Hello ${name}`)
-                // update user state with currently active user data
-                referenceMessagesUser = user.uid;
-
-                await referenceChatMessages.get({ uid: user.uid }).then((querySnapshot) => {
-                    const docs = querySnapshot.docs.map(doc => doc.data());
-                    if (docs) {
-                        if (docs.length > 0) {
-                            const oldMessages = [];
-                            //go through each document
-                            docs.forEach((doc) => {
-                                //get the QueryDocumentSnapshot's data                               
-                                oldMessages.push({
-                                    _id: doc._id,
-                                    text: doc.text,
-                                    createdAt: doc.createdAt.toDate(),
-                                    uid: doc.uid,
-                                    user: {
-                                        _id: doc.user._id,
-                                        name: doc.user.name,
-                                        avatar: doc.user.avatar,
-                                    },
-                                    image: doc.image,
-                                    location: doc.location,
-                                });
-                            });
-                            setMessages(oldMessages);
-                        }
-                    }
-                });
-                // Listen for collection changes for the user
-                unsubscribe = referenceChatMessages.orderBy('createdAt', 'desc').onSnapshot(onCollectionUpdate);
-
-                // stop listening for updates when no longer required
-                return () => {
-                    unsubscribe();
-                    authUnsubscribe();
-                };
-            })
-        }
-        // If the user is offline, let them know and get messages from AsyncStorage
-        else {
-            setLoginText('You appear to be offline');
-            getMessages().then((messageParsed) => setMessages(messageParsed));
-        }
-    }, [isOnline]);
-
-    // save messages to AsyncStorage when the state of 'messages' is updated
-    useEffect(() => {
-        saveMessages(messages);
-    }, [messages]);
 
     //Customize input toolbar - hide if offline
     const renderInputToolbar = (props) => {
@@ -271,8 +269,8 @@ export default function Chat(props) {
                 renderActions={renderCustomActions}
                 renderCustomView={renderCustomView}
                 messages={messages}
-                referenceMessagesUser={referenceMessagesUser}
-                onSend={messages => onSend(messages, referenceMessagesUser)}
+                uid={uid}
+                onSend={messages => onSend(messages, uid)}
                 user={user}
                 showAvatarForEveryMessage={true}
                 renderUsernameOnMessage={true}
