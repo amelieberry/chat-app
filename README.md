@@ -1,6 +1,8 @@
 # Chat App
 A native chat app built with React Native. The app provides users with a chat interface and options to share images and their location.
 
+![A screenshot of the start page and the chat page](/assets/chat-app-screenshots.png)
+
 ## Key Features
 * A page where users can enter their name and choose a background color for the chat screen before joining the chat.
 * A page displaying the conversation, as well as an input field and submit button.
