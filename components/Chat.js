@@ -240,20 +240,30 @@ export default function Chat(props) {
 
         if (currentMessage.location) {
             return (
-                <MapView
-                    style={{
-                        width: 150,
-                        height: 100,
-                        borderRadius: 13,
-                        margin: 3
-                    }}
-                    region={{
-                        latitude: currentMessage.location.latitude,
-                        longitude: currentMessage.location.longitude,
-                        latitudeDelta: 0.0922,
-                        longitudeDelta: 0.0421,
-                    }}
-                />
+                <View style={{
+                    alignSelf: 'center', 
+                    zIndex: -1, 
+                    overflow: 'hidden', 
+                    alignItems: 'center', 
+                    justifyContent: 'center', 
+                    height: 100, 
+                    width: 150, 
+                    borderRadius: 13, 
+                    margin: 3
+                }}>
+                    <MapView
+                        style={{
+                            width: '100%',
+                            height: '100%',                            
+                        }}
+                        region={{
+                            latitude: currentMessage.location.latitude,
+                            longitude: currentMessage.location.longitude,
+                            latitudeDelta: 0.0922,
+                            longitudeDelta: 0.0421,
+                        }}
+                    />
+                </View>
             )
         }
         return null;
